@@ -33,6 +33,8 @@ RUN_HEADERS = [
     "download_filename",
 ]
 
+SYSTEM_SHEETS = {"uploads", "runs", "Sheet1", "工作表1"}
+
 
 def _now_text() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -121,6 +123,12 @@ def append_record(sheet_name: str, record: Mapping[str, Any], headers: Sequence[
     ws.append_row(row, value_input_option="USER_ENTERED")
 
 
+def ensure_database() -> bool:
+    _worksheet("uploads", UPLOAD_HEADERS)
+    _worksheet("runs", RUN_HEADERS)
+    return True
+
+
 def record_upload(uploaded_file: Any, *, page: str, field: str = "", note: str = "") -> dict[str, Any]:
     if uploaded_file is None:
         return {}
@@ -139,12 +147,44 @@ def record_upload(uploaded_file: Any, *, page: str, field: str = "", note: str =
     return record
 
 
+def record_upload_once(uploaded_file: Any, *, page: str, field: str = "", note: str = "") -> dict[str, Any]:
+    if uploaded_file is None:
+        return {}
+
+    content = uploaded_file.getvalue()
+    digest = sha256_bytes(content)
+    state_key = f"gs_upload_saved::{page}::{field}::{getattr(uploaded_file, 'name', '')}::{digest}"
+    if st.session_state.get(state_key):
+        return {}
+
+    record = {
+        "created_at": _now_text(),
+        "page": page,
+        "field": field,
+        "file_name": getattr(uploaded_file, "name", ""),
+        "size_bytes": len(content),
+        "sha256": digest,
+        "note": note,
+    }
+    append_record("uploads", record, UPLOAD_HEADERS)
+    st.session_state[state_key] = True
+    return record
+
+
 def record_uploads(files: Any, *, page: str, field: str = "", note: str = "") -> list[dict[str, Any]]:
     if files is None:
         return []
     if not isinstance(files, list):
         files = [files]
     return [record_upload(file, page=page, field=field, note=note) for file in files if file is not None]
+
+
+def record_uploads_once(files: Any, *, page: str, field: str = "", note: str = "") -> list[dict[str, Any]]:
+    if files is None:
+        return []
+    if not isinstance(files, list):
+        files = [files]
+    return [record_upload_once(file, page=page, field=field, note=note) for file in files if file is not None]
 
 
 def save_run(
@@ -227,7 +267,12 @@ def save_result_dataframe(
 
 
 def read_sheet(sheet_name: str, max_rows: int = 500) -> pd.DataFrame:
-    ws = _spreadsheet().worksheet(sheet_name)
+    if sheet_name == "uploads":
+        ws = _worksheet("uploads", UPLOAD_HEADERS)
+    elif sheet_name == "runs":
+        ws = _worksheet("runs", RUN_HEADERS)
+    else:
+        ws = _spreadsheet().worksheet(sheet_name)
     rows = ws.get_all_records()
     if not rows:
         return pd.DataFrame()
@@ -235,4 +280,9 @@ def read_sheet(sheet_name: str, max_rows: int = 500) -> pd.DataFrame:
 
 
 def list_worksheets() -> list[str]:
+    ensure_database()
     return [ws.title for ws in _spreadsheet().worksheets()]
+
+
+def list_result_worksheets() -> list[str]:
+    return [name for name in list_worksheets() if name not in SYSTEM_SHEETS and name.startswith("result_")]

@@ -18,10 +18,12 @@ except Exception:
 try:
     from google_sheet_store import is_configured as gs_is_configured
     from google_sheet_store import record_uploads, save_result_dataframe
+    from google_sheet_store import record_uploads_once
 except Exception:
     gs_is_configured = None
     record_uploads = None
     save_result_dataframe = None
+    record_uploads_once = None
 
 
 # =========================
@@ -516,6 +518,24 @@ with st.container():
     with c2:
         master_file = st.file_uploader("第 2 個檔案：商品主檔 Excel", type=["xlsx", "xls"], key="master_file")
         location_detail_file = st.file_uploader("第 4 個檔案：儲位明細 Excel", type=["xlsx", "xls"], key="location_detail_file")
+
+    if gs_is_configured and gs_is_configured() and record_uploads_once:
+        try:
+            saved_uploads = []
+            for field_name, uploaded in [
+                ("原始明細", main_file),
+                ("商品主檔", master_file),
+                ("其他儲位/庫存明細", other_file),
+                ("儲位明細", location_detail_file),
+            ]:
+                saved_uploads.extend(
+                    record_uploads_once(uploaded, page="客訂差異分析", field=field_name, note="檔案選取後自動記錄")
+                )
+            if any(saved_uploads):
+                st.success("已將上傳檔案紀錄保存到 Google Sheet。")
+        except Exception as upload_exc:
+            st.warning(f"上傳紀錄保存失敗：{upload_exc}")
+
     if card_close:
         card_close()
 
@@ -576,16 +596,8 @@ if run_button:
         safe_batch = "_".join([x.strip().upper() for x in batch_input.replace("，", ",").split(",") if x.strip()])[:80]
         download_name = f"客訂差異_批次_{safe_batch}_{now_text}.xlsx"
 
-        if gs_is_configured and gs_is_configured() and record_uploads and save_result_dataframe:
+        if gs_is_configured and gs_is_configured() and save_result_dataframe:
             try:
-                for field_name, uploaded in [
-                    ("原始明細", main_file),
-                    ("商品主檔", master_file),
-                    ("其他儲位/庫存明細", other_file),
-                    ("儲位明細", location_detail_file),
-                ]:
-                    record_uploads(uploaded, page="客訂差異分析", field=field_name)
-
                 run_id = save_result_dataframe(
                     page="客訂差異分析",
                     df=result["df_final"],

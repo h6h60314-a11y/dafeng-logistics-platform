@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from common_ui import card_close, card_open, inject_logistics_theme, preview_table, set_page
-from google_sheet_store import is_configured, list_worksheets, read_sheet
+from google_sheet_store import ensure_database, is_configured, list_result_worksheets, read_sheet
 
 
 st.set_page_config(page_title="資料庫後台", page_icon="🗄️", layout="wide")
@@ -57,7 +57,13 @@ if not is_configured():
 
 
 card_open("連線狀態")
-st.success("Google Sheet 已連線，可以開始保存上傳與分析結果。")
+try:
+    ensure_database()
+    st.success("Google Sheet 已連線，uploads / runs 工作表已完成初始化。")
+except Exception as exc:
+    st.error(f"Google Sheet 初始化失敗：{type(exc).__name__}: {exc!r}")
+    card_close()
+    st.stop()
 card_close()
 
 tabs = st.tabs(["上傳紀錄", "分析紀錄", "結果資料表"])
@@ -65,22 +71,24 @@ tabs = st.tabs(["上傳紀錄", "分析紀錄", "結果資料表"])
 with tabs[0]:
     try:
         df_uploads = read_sheet("uploads", max_rows=500)
-    except Exception:
+    except Exception as exc:
+        st.error(f"讀取 uploads 失敗：{type(exc).__name__}: {exc!r}")
         df_uploads = pd.DataFrame()
     preview_table("最近上傳紀錄", df_uploads, rows=500, height=460)
 
 with tabs[1]:
     try:
         df_runs = read_sheet("runs", max_rows=500)
-    except Exception:
+    except Exception as exc:
+        st.error(f"讀取 runs 失敗：{type(exc).__name__}: {exc!r}")
         df_runs = pd.DataFrame()
     preview_table("最近分析紀錄", df_runs, rows=500, height=460)
 
 with tabs[2]:
     try:
-        sheets = [name for name in list_worksheets() if name not in {"uploads", "runs"}]
+        sheets = list_result_worksheets()
     except Exception as exc:
-        st.error(f"讀取工作表失敗：{exc}")
+        st.error(f"讀取結果工作表失敗：{type(exc).__name__}: {exc!r}")
         sheets = []
 
     if not sheets:
@@ -90,6 +98,6 @@ with tabs[2]:
         try:
             df_result = read_sheet(selected, max_rows=500)
         except Exception as exc:
-            st.error(f"讀取 {selected} 失敗：{exc}")
+            st.error(f"讀取 {selected} 失敗：{type(exc).__name__}: {exc!r}")
             df_result = pd.DataFrame()
         preview_table(f"{selected} 最近資料", df_result, rows=500, height=520)
