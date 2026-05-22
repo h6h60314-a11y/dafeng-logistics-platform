@@ -1,15 +1,12 @@
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
 class PageSpec:
-    path: str
-    title: str
-    icon: str
-    url_path: str
-    default: bool = False
+    __slots__ = ("path", "title", "icon", "url_path", "default")
+
+    def __init__(self, path: str, title: str, icon: str, url_path: str, default: bool = False):
+        self.path = path
+        self.title = title
+        self.icon = icon
+        self.url_path = url_path
+        self.default = default
 
 
 HIDDEN_NAV_LABELS = ["出貨課首頁", "進貨課首頁", "大樹KPI首頁", "大豐KPI首頁"]
