@@ -256,18 +256,57 @@ section[data-testid="stSidebar"] *{
   color:#334155;
 }
 
+/* Unified result display */
+._ui_section_label{
+  margin: 4px 0 8px;
+  color: #0F172A;
+  font-size: 14px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+._ui_section_note{
+  margin: -2px 0 10px;
+  color: #64748B;
+  font-size: 12px;
+  font-weight: 650;
+}
+._ui_result_meta{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 4px 8px;
+  border: 1px solid #D1D9E6;
+  border-radius: 6px;
+  background: #F8FAFC;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 750;
+}
+
 /* Tables */
 div[data-testid="stDataFrame"]{
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--line);
   background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+  margin-top: 6px;
+  margin-bottom: 12px;
 }
 
 div[data-testid="stDataFrame"] thead tr th{
   background: #E8EEF6 !important;
   color: #0F172A !important;
   font-weight: 800 !important;
+}
+
+div[data-testid="stDataEditor"]{
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04);
 }
 
 /* Inputs */
@@ -306,6 +345,10 @@ textarea{
 }
 
 /* Download button */
+div[data-testid="stDownloadButton"]{
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
 div[data-testid="stDownloadButton"] button{
   border-radius: 6px !important;
   border: 1px solid #0B3A67 !important;
@@ -320,20 +363,39 @@ div[data-testid="stDownloadButton"] button:hover{
 }
 
 /* Uploader */
+div[data-testid="stFileUploader"]{
+  margin-top: 6px;
+  margin-bottom: 14px;
+}
+div[data-testid="stFileUploader"] label,
+div[data-testid="stFileUploader"] label span,
+div[data-testid="stFileUploader"] label p{
+  color: #0F172A !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+}
 div[data-testid="stFileUploaderDropzone"]{
   border-radius: 8px;
-  border: 1px dashed #94A3B8;
-  background: #FFFFFF;
+  border: 1px dashed #94A3B8 !important;
+  background: #FFFFFF !important;
   color: #111827 !important;
+  min-height: 74px !important;
+  padding: 12px !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.55);
 }
 div[data-testid="stFileUploaderDropzone"] *{
   color: #111827 !important;
+}
+div[data-testid="stFileUploaderDropzone"]:hover{
+  border-color: #0B3A67 !important;
+  background: #F8FAFC !important;
 }
 div[data-testid="stFileUploaderDropzone"] button{
   border-radius: 6px !important;
   border: 1px solid #CBD5E1 !important;
   background: #F8FAFC !important;
   color: #111827 !important;
+  font-weight: 750 !important;
 }
 div[data-testid="stFileUploaderDropzone"] small{
   color: #475569 !important;
@@ -402,6 +464,94 @@ def card_open_plain():
 
 def card_close():
     st.markdown("</div>", unsafe_allow_html=True)
+
+
+# =========================================================
+# Unified upload / download / result blocks
+# =========================================================
+def section_label(title: str, note: Optional[str] = None):
+    st.markdown(f'<div class="_ui_section_label">{title}</div>', unsafe_allow_html=True)
+    if note:
+        st.markdown(f'<div class="_ui_section_note">{note}</div>', unsafe_allow_html=True)
+
+
+def upload_file(
+    label: str,
+    *,
+    type: Optional[Sequence[str]] = None,
+    key: Optional[str] = None,
+    accept_multiple_files: bool = False,
+    help: Optional[str] = None,
+):
+    return st.file_uploader(
+        label,
+        type=type,
+        key=key,
+        accept_multiple_files=accept_multiple_files,
+        help=help,
+    )
+
+
+def download_file_button(
+    *,
+    data: bytes,
+    filename: str,
+    label: str = "下載結果",
+    mime: str = "application/octet-stream",
+    key: Optional[str] = None,
+    use_container_width: bool = True,
+):
+    return st.download_button(
+        label=label,
+        data=data,
+        file_name=filename,
+        mime=mime,
+        key=key,
+        use_container_width=use_container_width,
+    )
+
+
+def result_table(
+    title: str,
+    df: Optional[pd.DataFrame],
+    *,
+    height: Optional[int] = None,
+    hide_index: bool = True,
+    rows: Optional[int] = None,
+    empty_text: str = "目前沒有可顯示的資料",
+):
+    card_open(title)
+    if df is None or df.empty:
+        st.info(empty_text)
+    else:
+        show_df = df.head(int(rows)) if rows else df
+        st.markdown(f'<div class="_ui_result_meta">共 {len(df):,} 筆資料</div>', unsafe_allow_html=True)
+        kwargs: Dict[str, Any] = {
+            "use_container_width": True,
+            "hide_index": hide_index,
+        }
+        if height is not None:
+            kwargs["height"] = height
+        st.dataframe(show_df, **kwargs)
+    card_close()
+
+
+def preview_table(
+    title: str,
+    df: Optional[pd.DataFrame],
+    *,
+    rows: int = 200,
+    height: int = 420,
+    hide_index: bool = True,
+):
+    result_table(
+        title,
+        df,
+        rows=rows,
+        height=height,
+        hide_index=hide_index,
+        empty_text="目前沒有可預覽的資料",
+    )
 
 
 # =========================================================
@@ -639,10 +789,10 @@ def download_excel(
     label: str = "⬇️ 匯出 KPI 報表",
     use_container_width: bool = True,
 ):
-    st.download_button(
+    return download_file_button(
         label=label,
         data=xlsx_bytes,
-        file_name=filename,
+        filename=filename,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=use_container_width,
     )
@@ -657,10 +807,10 @@ def download_excel_button(
     你要的效果：畫面只看到「一行」，而且那一行就是按鈕。
     用法：頁面上直接呼叫（不要再 card_open）
     """
-    st.download_button(
+    return download_file_button(
         label=label,
         data=xlsx_bytes,
-        file_name=filename,
+        filename=filename,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         use_container_width=True,
     )
