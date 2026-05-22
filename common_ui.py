@@ -27,8 +27,8 @@ section[data-testid="stSidebar"]{{
   padding-top: 12px;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
                "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
-  background: #ffffff !important;
-  border-right: 1px solid #D8DEE8 !important;
+  background: #0F1F33 !important;
+  border-right: 1px solid #102A43 !important;
 }}
 section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]{{
   text-decoration: none !important;
@@ -36,16 +36,25 @@ section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]{{
   border-radius: 6px !important;
   margin: 2px 10px !important;
   padding: 8px 10px !important;
-  color: #1F2937 !important;
+  color: #D7E1EE !important;
+  opacity: 1 !important;
 }}
 section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"] *{{
   font-size: 14px !important;
   font-weight: 650 !important;
   line-height: 1.45 !important;
   letter-spacing: 0 !important;
+  color: inherit !important;
+  opacity: 1 !important;
 }}
 section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]:hover{{
-  background: #F3F6FA !important;
+  background: #172A45 !important;
+  color: #FFFFFF !important;
+}}
+section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][aria-current="page"]{{
+  background: #1B4D7A !important;
+  color: #FFFFFF !important;
+  border-left: 3px solid #60A5FA !important;
 }}
 section[data-testid="stSidebar"] li a[data-testid="stSidebarNavLink"]{{
   padding-top: 8px !important;
@@ -73,7 +82,7 @@ section[data-testid="stSidebar"] [data-testid="stSidebarNav"] h3,
 section[data-testid="stSidebar"] [data-testid="stSidebarNav"] h4{{
   font-size: 12px !important;
   font-weight: 800 !important;
-  color: #64748B !important;
+  color: #8EA6C1 !important;
   letter-spacing: .08em !important;
   margin: 18px 12px 6px !important;
   text-transform: uppercase !important;
@@ -138,7 +147,7 @@ def inject_logistics_theme():
 :root{
   --ink: #111827;
   --muted: #5B667A;
-  --line: #D8DEE8;
+  --line: #D1D9E6;
   --card: #FFFFFF;
   --card2: #FFFFFF;
   --blue: #0B3A67;
@@ -152,7 +161,7 @@ def inject_logistics_theme():
 
 .stApp {
   color: var(--ink);
-  background: linear-gradient(180deg, #F8FAFC 0%, #EEF3F8 100%);
+  background: #F3F6FA;
 }
 
 /* remove top bar feeling */
@@ -162,10 +171,10 @@ div[data-testid="stDecoration"] { display: none; }
 /* ============== Layout: make center wider ============== */
 .block-container{
   max-width: 1600px !important;
-  padding-top: 1.2rem !important;
+  padding-top: 1.4rem !important;
   padding-bottom: 1.6rem !important;
-  padding-left: 1.25rem !important;
-  padding-right: 1.25rem !important;
+  padding-left: 1.4rem !important;
+  padding-right: 1.4rem !important;
 }
 @media (min-width: 1800px){
   .block-container{ max-width: 1800px !important; }
@@ -184,11 +193,35 @@ p, label, span { letter-spacing: 0 !important; }
 
 /* Sidebar */
 section[data-testid="stSidebar"]{
-  background: #FFFFFF;
-  border-right: 1px solid var(--line);
+  background: #0F1F33 !important;
+  border-right: 1px solid #102A43 !important;
 }
 section[data-testid="stSidebar"] *{
   font-size: 13px !important;
+  opacity: 1 !important;
+}
+
+/* Page header */
+._page_header{
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-left: 5px solid #0B3A67;
+  border-radius: 8px;
+  padding: 18px 20px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+}
+._page_title{
+  color: #0F172A;
+  font-size: 26px;
+  font-weight: 850;
+  line-height: 1.25;
+}
+._page_subtitle{
+  margin-top: 8px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 650;
 }
 
 /* Card */
@@ -196,8 +229,8 @@ section[data-testid="stSidebar"] *{
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 8px;
-  padding: 16px 18px 14px 18px;
-  margin-bottom: 14px;
+  padding: 18px 20px 16px 20px;
+  margin-bottom: 16px;
   box-shadow: 0 1px 2px rgba(15,23,42,0.05);
 }
 ._gt_card h3{
@@ -229,6 +262,21 @@ div[data-testid="stDataFrame"]{
   overflow: hidden;
   border: 1px solid var(--line);
   background: #FFFFFF;
+}
+
+div[data-testid="stDataFrame"] thead tr th{
+  background: #E8EEF6 !important;
+  color: #0F172A !important;
+  font-weight: 800 !important;
+}
+
+/* Inputs */
+div[data-baseweb="input"] input,
+div[data-baseweb="select"] > div,
+textarea{
+  border-color: #CBD5E1 !important;
+  background: #FFFFFF !important;
+  color: #111827 !important;
 }
 
 /* KPI Metric size */
@@ -306,9 +354,18 @@ def inject_purple_theme():
 # =========================================================
 def set_page(title: str, icon: str = "🏭", subtitle: Optional[str] = None):
     inject_logistics_theme()
-    st.markdown(f"## {icon} {title}")
+    subtitle_html = f'<div class="_page_subtitle">{subtitle}</div>' if subtitle else ""
+    st.markdown(
+        f"""
+<div class="_page_header">
+  <div class="_page_title">{icon} {title}</div>
+  {subtitle_html}
+</div>
+""",
+        unsafe_allow_html=True,
+    )
     if subtitle:
-        st.markdown(f'<div class="_gt_hint">{subtitle}</div>', unsafe_allow_html=True)
+        return
 
 
 def hint(text: str):
