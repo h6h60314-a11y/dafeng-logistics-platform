@@ -45,43 +45,42 @@ def _css_and_js():
 .entry-grid{
   display:grid;
   grid-template-columns: repeat(3, minmax(220px, 1fr));
-  gap: 14px;
-  margin-top: 10px;
+  gap: 16px;
+  margin-top: 12px;
 }
 @media (max-width: 1100px){ .entry-grid{ grid-template-columns: repeat(2, minmax(220px, 1fr)); } }
 @media (max-width: 700px){ .entry-grid{ grid-template-columns: repeat(1, minmax(220px, 1fr)); } }
 
 .entry{
   position: relative;
-  border-radius: 16px;
-  border: 1px solid rgba(15,23,42,0.10);
-  background: rgba(255,255,255,0.92);
-  padding: 14px 14px 12px;
-  min-height: 96px;
-  box-shadow: 0 14px 26px rgba(2,6,23,0.06);
+  border-radius: 8px;
+  border: 1px solid #D8DEE8;
+  background: #FFFFFF;
+  padding: 16px 18px 14px;
+  min-height: 104px;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.05);
   overflow: hidden;
-  transition: transform .08s ease, box-shadow .12s ease, border-color .12s ease;
+  transition: border-color .12s ease, box-shadow .12s ease;
 }
 .entry:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 18px 32px rgba(2,6,23,0.10);
-  border-color: rgba(15,23,42,0.18);
+  box-shadow: 0 4px 12px rgba(15,23,42,0.08);
+  border-color: #0B3A67;
 }
 .entry-head{ display:flex; align-items:center; gap:10px; }
 .entry-ico{
-  width: 34px; height: 34px;
-  border-radius: 12px;
+  width: 36px; height: 36px;
+  border-radius: 6px;
   display:flex; align-items:center; justify-content:center;
   font-size: 18px;
-  border: 1px solid rgba(15,23,42,0.10);
-  background: rgba(255,255,255,0.85);
+  border: 1px solid #D8DEE8;
+  background: #F4F7FB;
 }
-.entry-name{ font-size:16px; font-weight:950; line-height:1.15; color: rgba(15,23,42,0.92); }
-.entry-desc{ margin-top:6px; font-size:12px; font-weight:850; color: rgba(15,23,42,0.62); line-height:1.35; }
+.entry-name{ font-size:16px; font-weight:800; line-height:1.2; color: #0F172A; }
+.entry-desc{ margin-top:8px; font-size:12.5px; font-weight:650; color: #5B667A; line-height:1.45; padding-right: 56px; }
 .entry-cta{
   position:absolute; right: 12px; bottom: 10px;
-  font-size: 12px; font-weight: 950;
-  color: rgba(15,23,42,0.55);
+  font-size: 12px; font-weight: 800;
+  color: #0B3A67;
 }
 
 a.entry-link{ text-decoration:none !important; color: inherit !important; display:block; }

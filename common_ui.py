@@ -24,49 +24,59 @@ def inject_sidebar_nav_style(hidden_labels: Sequence[str], hidden_url_keys: Sequ
         f"""
 <style>
 section[data-testid="stSidebar"]{{
-  padding-top: 10px;
+  padding-top: 12px;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI",
                "Noto Sans TC", "Microsoft JhengHei", Arial, sans-serif;
+  background: #ffffff !important;
+  border-right: 1px solid #D8DEE8 !important;
 }}
 section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]{{
   text-decoration: none !important;
-  gap: 8px !important;
+  gap: 10px !important;
+  border-radius: 6px !important;
+  margin: 2px 10px !important;
+  padding: 8px 10px !important;
+  color: #1F2937 !important;
 }}
 section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"] *{{
-  font-size: 15.5px !important;
+  font-size: 14px !important;
   font-weight: 650 !important;
-  line-height: 1.55 !important;
-  letter-spacing: .2px !important;
+  line-height: 1.45 !important;
+  letter-spacing: 0 !important;
+}}
+section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]:hover{{
+  background: #F3F6FA !important;
 }}
 section[data-testid="stSidebar"] li a[data-testid="stSidebarNavLink"]{{
-  padding-top: 6px !important;
-  padding-bottom: 6px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
 }}
 section[data-testid="stSidebar"] ul > li:first-child a[data-testid="stSidebarNavLink"]{{
   display:flex !important;
   align-items:center !important;
   justify-content:flex-start !important;
-  gap:8px !important;
-  padding: 10px 12px !important;
-  min-height:48px !important;
-  border-radius: 12px !important;
+  gap:10px !important;
+  padding: 8px 10px !important;
+  min-height:40px !important;
+  border-radius: 6px !important;
 }}
 section[data-testid="stSidebar"] ul > li:first-child a[data-testid="stSidebarNavLink"] *{{
-  font-size: 26px !important;
-  font-weight: 900 !important;
-  line-height: 1.15 !important;
+  font-size: 15px !important;
+  font-weight: 750 !important;
+  line-height: 1.35 !important;
   white-space: nowrap !important;
   text-align: left !important;
-  letter-spacing: .3px !important;
+  letter-spacing: 0 !important;
 }}
 section[data-testid="stSidebar"] [data-testid="stSidebarNav"] h2,
 section[data-testid="stSidebar"] [data-testid="stSidebarNav"] h3,
 section[data-testid="stSidebar"] [data-testid="stSidebarNav"] h4{{
-  font-size: 13.5px !important;
-  font-weight: 850 !important;
-  color: rgba(15,23,42,.72) !important;
-  letter-spacing: .9px !important;
-  margin: 14px 0 6px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: #64748B !important;
+  letter-spacing: .08em !important;
+  margin: 18px 12px 6px !important;
+  text-transform: uppercase !important;
 }}
 {hidden_href_css}
 {hidden_label_css}
@@ -126,21 +136,23 @@ def inject_logistics_theme():
         """
 <style>
 :root{
-  --ink: rgba(15, 23, 42, 0.92);
-  --muted: rgba(15, 23, 42, 0.60);
-  --line: rgba(15, 23, 42, 0.10);
-  --card: rgba(255,255,255,0.88);
-  --card2: rgba(255,255,255,0.70);
-  --blue: rgba(2, 132, 199, 1.00);
-  --blueSoft: rgba(2, 132, 199, 0.12);
-  --blueSoft2: rgba(2, 132, 199, 0.18);
+  --ink: #111827;
+  --muted: #5B667A;
+  --line: #D8DEE8;
+  --card: #FFFFFF;
+  --card2: #FFFFFF;
+  --blue: #0B3A67;
+  --blueSoft: #EAF1F8;
+  --blueSoft2: #DDEAF6;
+  --surface: #F4F7FB;
+  --surface2: #EEF3F8;
   --badBg: #FDE2E2;
   --badText: #7F1D1D;
 }
 
 .stApp {
   color: var(--ink);
-  background: radial-gradient(1200px 700px at 20% 0%, rgba(2,132,199,0.10) 0%, #f5f8fc 55%, #ecf2fa 100%);
+  background: linear-gradient(180deg, #F8FAFC 0%, #EEF3F8 100%);
 }
 
 /* remove top bar feeling */
@@ -150,10 +162,10 @@ div[data-testid="stDecoration"] { display: none; }
 /* ============== Layout: make center wider ============== */
 .block-container{
   max-width: 1600px !important;
-  padding-top: 0.8rem !important;
+  padding-top: 1.2rem !important;
   padding-bottom: 1.6rem !important;
-  padding-left: 1.0rem !important;
-  padding-right: 1.0rem !important;
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
 }
 @media (min-width: 1800px){
   .block-container{ max-width: 1800px !important; }
@@ -165,13 +177,14 @@ html, body, [class*="st-"], .stApp{
 }
 
 /* 標題縮小 */
-h1 { font-size: 28px !important; }
-h2 { font-size: 22px !important; }
-h3 { font-size: 16px !important; }
+h1 { font-size: 28px !important; font-weight: 800 !important; color: #0F172A !important; }
+h2 { font-size: 22px !important; font-weight: 800 !important; color: #0F172A !important; }
+h3 { font-size: 16px !important; font-weight: 750 !important; color: #111827 !important; }
+p, label, span { letter-spacing: 0 !important; }
 
 /* Sidebar */
 section[data-testid="stSidebar"]{
-  background: #f8fafc;
+  background: #FFFFFF;
   border-right: 1px solid var(--line);
 }
 section[data-testid="stSidebar"] *{
@@ -182,14 +195,14 @@ section[data-testid="stSidebar"] *{
 ._gt_card{
   border: 1px solid var(--line);
   background: var(--card);
-  border-radius: 20px;
-  padding: 14px 14px 10px 14px;
-  margin-bottom: 12px;
-  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+  border-radius: 8px;
+  padding: 16px 18px 14px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.05);
 }
 ._gt_card h3{
-  margin: 0 0 8px 0;
-  letter-spacing: .2px;
+  margin: 0 0 10px 0;
+  letter-spacing: 0;
 }
 
 /* Helpers */
@@ -201,20 +214,21 @@ section[data-testid="stSidebar"] *{
 }
 ._gt_badge{
   display:inline-block;
-  padding:2px 10px;
-  border-radius:999px;
+  padding:3px 9px;
+  border-radius:6px;
   border:1px solid var(--line);
   font-size:12px;
   font-weight:800;
-  background:#fff;
+  background:#F8FAFC;
+  color:#334155;
 }
 
 /* Tables */
 div[data-testid="stDataFrame"]{
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--line);
-  background: var(--card2);
+  background: #FFFFFF;
 }
 
 /* KPI Metric size */
@@ -230,37 +244,51 @@ div[data-testid="stDataFrame"]{
 
 /* Buttons */
 .stButton > button{
-  border-radius: 14px;
-  border: 1px solid rgba(2, 132, 199, 0.30);
-  background: var(--blueSoft);
-  color: var(--ink);
+  border-radius: 6px;
+  border: 1px solid #0B3A67;
+  background: #0B3A67;
+  color: #FFFFFF;
   padding: 0.50rem 0.85rem;
-  font-weight: 850;
+  font-weight: 750;
 }
 .stButton > button:hover{
-  border: 1px solid rgba(2, 132, 199, 0.45);
-  background: var(--blueSoft2);
+  border: 1px solid #082B4D;
+  background: #082B4D;
+  color: #FFFFFF;
 }
 
 /* Download button */
 div[data-testid="stDownloadButton"] button{
-  border-radius: 14px !important;
-  border: 1px solid rgba(2, 132, 199, 0.30) !important;
-  background: var(--blueSoft) !important;
-  color: var(--ink) !important;
+  border-radius: 6px !important;
+  border: 1px solid #0B3A67 !important;
+  background: #0B3A67 !important;
+  color: #FFFFFF !important;
   padding: 0.60rem 0.95rem !important;
-  font-weight: 900 !important;
+  font-weight: 750 !important;
 }
 div[data-testid="stDownloadButton"] button:hover{
-  border: 1px solid rgba(2, 132, 199, 0.45) !important;
-  background: var(--blueSoft2) !important;
+  border: 1px solid #082B4D !important;
+  background: #082B4D !important;
 }
 
 /* Uploader */
 div[data-testid="stFileUploaderDropzone"]{
-  border-radius: 18px;
-  border: 1px dashed rgba(15, 23, 42, 0.22);
-  background: rgba(255,255,255,0.80);
+  border-radius: 8px;
+  border: 1px dashed #94A3B8;
+  background: #FFFFFF;
+  color: #111827 !important;
+}
+div[data-testid="stFileUploaderDropzone"] *{
+  color: #111827 !important;
+}
+div[data-testid="stFileUploaderDropzone"] button{
+  border-radius: 6px !important;
+  border: 1px solid #CBD5E1 !important;
+  background: #F8FAFC !important;
+  color: #111827 !important;
+}
+div[data-testid="stFileUploaderDropzone"] small{
+  color: #475569 !important;
 }
 </style>
 """,
