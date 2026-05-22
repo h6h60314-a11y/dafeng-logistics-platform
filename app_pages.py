@@ -19,6 +19,7 @@ HIDDEN_NAV_URL_KEYS = ["outbound-home", "inbound-home", "gt-kpi-home", "df-kpi-h
 NAV_SECTIONS: dict[str, list[PageSpec]] = {
     "": [
         PageSpec("pages/0_首頁.py", "首頁", "🏠", "home", default=True),
+        PageSpec("pages/31_資料庫後台.py", "資料庫後台", "🗄️", "database-admin"),
     ],
     "出貨課": [
         PageSpec("pages/7_出貨課首頁.py", "出貨課首頁", "📦", "outbound-home"),

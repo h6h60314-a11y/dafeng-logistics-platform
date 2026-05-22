@@ -15,6 +15,14 @@ except Exception:
     card_open = None
     card_close = None
 
+try:
+    from google_sheet_store import is_configured as gs_is_configured
+    from google_sheet_store import record_uploads, save_result_dataframe
+except Exception:
+    gs_is_configured = None
+    record_uploads = None
+    save_result_dataframe = None
+
 
 # =========================
 # 頁面設定
@@ -567,6 +575,33 @@ if run_button:
         now_text = datetime.now().strftime("%Y%m%d_%H%M")
         safe_batch = "_".join([x.strip().upper() for x in batch_input.replace("，", ",").split(",") if x.strip()])[:80]
         download_name = f"客訂差異_批次_{safe_batch}_{now_text}.xlsx"
+
+        if gs_is_configured and gs_is_configured() and record_uploads and save_result_dataframe:
+            try:
+                for field_name, uploaded in [
+                    ("原始明細", main_file),
+                    ("商品主檔", master_file),
+                    ("其他儲位/庫存明細", other_file),
+                    ("儲位明細", location_detail_file),
+                ]:
+                    record_uploads(uploaded, page="客訂差異分析", field=field_name)
+
+                run_id = save_result_dataframe(
+                    page="客訂差異分析",
+                    df=result["df_final"],
+                    parameters={
+                        "batch_input": batch_input,
+                        "use_threshold": use_threshold,
+                        "min_diff_value": min_diff_value if use_threshold else None,
+                    },
+                    summary=summary,
+                    download_filename=download_name,
+                    worksheet_name="result_客訂差異分析",
+                )
+                st.success(f"已保存到 Google Sheet，執行編號：{run_id}")
+            except Exception as db_exc:
+                st.warning(f"Google Sheet 保存失敗，但分析結果仍可下載：{db_exc}")
+
         st.download_button(
             label="下載 Excel 報表",
             data=result["output_bytes"],
