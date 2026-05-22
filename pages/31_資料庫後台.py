@@ -69,7 +69,7 @@ except Exception as exc:
     st.stop()
 card_close()
 
-tabs = st.tabs(["上傳紀錄", "分析紀錄", "結果資料表"])
+tabs = st.tabs(["上傳紀錄", "分析紀錄", "主管效率資料", "結果資料表"])
 
 with tabs[0]:
     try:
@@ -88,6 +88,14 @@ with tabs[1]:
     preview_table("最近分析紀錄", df_runs, rows=500, height=460)
 
 with tabs[2]:
+    try:
+        df_eff = read_sheet("efficiency_daily", max_rows=500)
+    except Exception as exc:
+        st.error(f"讀取 efficiency_daily 失敗：{type(exc).__name__}: {exc!r}")
+        df_eff = pd.DataFrame()
+    preview_table("最近主管效率資料", df_eff, rows=500, height=460)
+
+with tabs[3]:
     try:
         sheets = list_result_worksheets()
     except Exception as exc:

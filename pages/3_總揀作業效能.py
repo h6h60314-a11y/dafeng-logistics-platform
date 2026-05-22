@@ -10,6 +10,13 @@ import streamlit as st
 
 from common_ui import inject_logistics_theme, set_page, card_open, card_close
 
+try:
+    from google_sheet_store import is_configured as gs_is_configured
+    from google_sheet_store import save_efficiency_dataframe
+except Exception:
+    gs_is_configured = None
+    save_efficiency_dataframe = None
+
 
 # =========================================================
 # 參數（保留你原本邏輯）
@@ -797,6 +804,44 @@ def main():
                 low_threshold=float(low_threshold),
                 high_threshold=float(high_threshold),
             )
+
+            if gs_is_configured and gs_is_configured() and save_efficiency_dataframe:
+                try:
+                    work_date = full_df["揀貨完成時間"].min().date()
+                    save_frames = []
+                    if morning_stats is not None and not morning_stats.empty:
+                        m = morning_stats.copy()
+                        m["日期"] = work_date
+                        m["班別"] = "AM"
+                        m["達標門檻"] = m["區域"].map({"高空": float(high_threshold), "低空": float(low_threshold)}).fillna(float(low_threshold))
+                        save_frames.append(m)
+                    if afternoon_stats is not None and not afternoon_stats.empty:
+                        a = afternoon_stats.copy()
+                        a["日期"] = work_date
+                        a["班別"] = "PM"
+                        a["達標門檻"] = a["區域"].map({"高空": float(high_threshold), "低空": float(low_threshold)}).fillna(float(low_threshold))
+                        save_frames.append(a)
+
+                    if save_frames:
+                        save_df = pd.concat(save_frames, ignore_index=True)
+                        gs_run_id = save_efficiency_dataframe(
+                            save_df,
+                            source_page="總揀作業效能",
+                            department="進貨課",
+                            operation="總揀",
+                            date_col="日期",
+                            employee_id_col="揀貨人",
+                            employee_name_col="姓名",
+                            shift_col="班別",
+                            count_col="筆數",
+                            minutes_col="總分鐘",
+                            efficiency_col="效率",
+                            target=None,
+                            note=report_title,
+                        )
+                        st.success(f"已寫入主管效率查詢資料，執行編號：{gs_run_id}")
+                except Exception as gs_exc:
+                    st.warning(f"主管效率資料保存失敗，但本次分析仍可使用：{gs_exc}")
 
             st.session_state.picking_result = {
                 "report_title": report_title.strip() or "總揀達標獎金計算報表（合併版）",

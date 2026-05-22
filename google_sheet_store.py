@@ -33,7 +33,25 @@ RUN_HEADERS = [
     "download_filename",
 ]
 
-SYSTEM_SHEETS = {"uploads", "runs", "Sheet1", "工作表1"}
+EFFICIENCY_HEADERS = [
+    "saved_at",
+    "work_date",
+    "department",
+    "operation",
+    "employee_id",
+    "employee_name",
+    "shift",
+    "work_count",
+    "work_minutes",
+    "efficiency",
+    "target",
+    "is_pass",
+    "source_page",
+    "run_id",
+    "note",
+]
+
+SYSTEM_SHEETS = {"uploads", "runs", "efficiency_daily", "Sheet1", "工作表1"}
 
 
 def _now_text() -> str:
@@ -132,6 +150,7 @@ def ensure_database() -> bool:
     try:
         _worksheet("uploads", UPLOAD_HEADERS)
         _worksheet("runs", RUN_HEADERS)
+        _worksheet("efficiency_daily", EFFICIENCY_HEADERS)
     except PermissionError as exc:
         email = service_account_email()
         raise PermissionError(
@@ -139,6 +158,92 @@ def ensure_database() -> bool:
             f"把 service account 加為「編輯者」：{email}"
         ) from exc
     return True
+
+
+def append_efficiency_records(records: Sequence[Mapping[str, Any]], *, run_id: str = "") -> int:
+    if not records:
+        return 0
+
+    rows = []
+    saved_at = _now_text()
+    for record in records:
+        row = dict(record)
+        row.setdefault("saved_at", saved_at)
+        row.setdefault("run_id", run_id)
+        rows.append(row)
+
+    ws = _worksheet("efficiency_daily", EFFICIENCY_HEADERS)
+    current_headers = ws.row_values(1) or list(EFFICIENCY_HEADERS)
+    values = [[row.get(header, "") for header in current_headers] for row in rows]
+    ws.append_rows(values, value_input_option="USER_ENTERED")
+    return len(rows)
+
+
+def save_efficiency_dataframe(
+    df: pd.DataFrame,
+    *,
+    source_page: str,
+    department: str = "",
+    operation: str = "",
+    date_col: str = "日期",
+    employee_id_col: str = "",
+    employee_name_col: str = "姓名",
+    shift_col: str = "",
+    count_col: str = "筆數",
+    minutes_col: str = "總分鐘",
+    efficiency_col: str = "效率",
+    target: Optional[float] = None,
+    note: str = "",
+) -> str:
+    if df is None or df.empty:
+        return ""
+
+    run_id = uuid.uuid4().hex[:12]
+    records: list[dict[str, Any]] = []
+    for _, row in df.iterrows():
+        if date_col and date_col in df.columns:
+            work_date = pd.to_datetime(row.get(date_col), errors="coerce")
+            work_date_text = work_date.strftime("%Y-%m-%d") if pd.notna(work_date) else str(row.get(date_col, ""))
+        else:
+            work_date_text = ""
+
+        if not work_date_text:
+            continue
+
+        employee_id = str(row.get(employee_id_col, "")) if employee_id_col and employee_id_col in df.columns else ""
+        employee_name = str(row.get(employee_name_col, "")) if employee_name_col in df.columns else employee_id
+        efficiency = pd.to_numeric(pd.Series([row.get(efficiency_col, "")]), errors="coerce").iloc[0] if efficiency_col in df.columns else None
+        work_count = row.get(count_col, "") if count_col in df.columns else ""
+        work_minutes = row.get(minutes_col, "") if minutes_col in df.columns else ""
+        shift = str(row.get(shift_col, "")) if shift_col and shift_col in df.columns else ""
+        row_target = target
+        if row_target is None and "達標門檻" in df.columns:
+            row_target = pd.to_numeric(pd.Series([row.get("達標門檻", "")]), errors="coerce").iloc[0]
+        target_value = float(row_target) if row_target is not None and pd.notna(row_target) else ""
+        is_pass = ""
+        if target_value != "" and pd.notna(efficiency):
+            is_pass = bool(float(efficiency) >= float(target_value))
+
+        records.append(
+            {
+                "work_date": work_date_text,
+                "department": department,
+                "operation": operation,
+                "employee_id": employee_id,
+                "employee_name": employee_name,
+                "shift": shift,
+                "work_count": work_count,
+                "work_minutes": work_minutes,
+                "efficiency": "" if pd.isna(efficiency) else float(efficiency),
+                "target": target_value,
+                "is_pass": is_pass,
+                "source_page": source_page,
+                "note": note,
+            }
+        )
+
+    append_efficiency_records(records, run_id=run_id)
+    return run_id
 
 
 def record_upload(uploaded_file: Any, *, page: str, field: str = "", note: str = "") -> dict[str, Any]:
@@ -283,6 +388,8 @@ def read_sheet(sheet_name: str, max_rows: int = 500) -> pd.DataFrame:
         ws = _worksheet("uploads", UPLOAD_HEADERS)
     elif sheet_name == "runs":
         ws = _worksheet("runs", RUN_HEADERS)
+    elif sheet_name == "efficiency_daily":
+        ws = _worksheet("efficiency_daily", EFFICIENCY_HEADERS)
     else:
         ws = _spreadsheet().worksheet(sheet_name)
     rows = ws.get_all_records()
@@ -298,3 +405,17 @@ def list_worksheets() -> list[str]:
 
 def list_result_worksheets() -> list[str]:
     return [name for name in list_worksheets() if name not in SYSTEM_SHEETS and name.startswith("result_")]
+
+
+def read_efficiency_daily(start_date: Any, end_date: Any, max_rows: int = 5000) -> pd.DataFrame:
+    df = read_sheet("efficiency_daily", max_rows=max_rows)
+    if df is None or df.empty or "work_date" not in df.columns:
+        return pd.DataFrame()
+
+    data = df.copy()
+    data["_work_date"] = pd.to_datetime(data["work_date"], errors="coerce")
+    start = pd.to_datetime(start_date)
+    end = pd.to_datetime(end_date)
+    data = data[(data["_work_date"] >= start) & (data["_work_date"] <= end)]
+    data = data.drop(columns=["_work_date"])
+    return data

@@ -18,6 +18,13 @@ from common_ui import (
     sidebar_controls,
 )
 
+try:
+    from google_sheet_store import is_configured as gs_is_configured
+    from google_sheet_store import save_efficiency_dataframe
+except Exception:
+    gs_is_configured = None
+    save_efficiency_dataframe = None
+
 # =========================================================
 # 參數
 # =========================================================
@@ -1182,6 +1189,26 @@ def main():
                 target_eff=float(target_eff),
             )
             xlsx_name = f"{uploaded.name.rsplit('.', 1)[0]}_上架績效.xlsx"
+
+            if gs_is_configured and gs_is_configured() and save_efficiency_dataframe:
+                try:
+                    gs_run_id = save_efficiency_dataframe(
+                        daily,
+                        source_page="上架作業效能",
+                        department="進貨課",
+                        operation="上架",
+                        date_col="日期",
+                        employee_id_col=user_col,
+                        employee_name_col="對應姓名",
+                        count_col="總筆數",
+                        minutes_col="當日工時_分鐘_扣休",
+                        efficiency_col="效率_件每小時",
+                        target=float(target_eff),
+                        note=uploaded.name,
+                    )
+                    st.success(f"已寫入主管效率查詢資料，執行編號：{gs_run_id}")
+                except Exception as gs_exc:
+                    st.warning(f"主管效率資料保存失敗，但本次分析仍可使用：{gs_exc}")
 
             st.session_state.putaway_last = {
                 "params": current_params,
