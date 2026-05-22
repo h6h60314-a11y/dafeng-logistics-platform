@@ -139,14 +139,28 @@ def _worksheet(title: str, headers: Sequence[str]):
     return ws
 
 
+def _clear_read_caches():
+    for func in (_cached_sheet_records, _cached_worksheet_names):
+        try:
+            func.clear()
+        except Exception:
+            pass
+
+
 def append_record(sheet_name: str, record: Mapping[str, Any], headers: Sequence[str]):
     ws = _worksheet(sheet_name, headers)
-    current_headers = ws.row_values(1) or list(headers)
+    current_headers = list(headers)
     row = [record.get(header, "") for header in current_headers]
     ws.append_row(row, value_input_option="USER_ENTERED")
+    _clear_read_caches()
 
 
 def ensure_database() -> bool:
+    return _ensure_database_cached()
+
+
+@st.cache_data(ttl=600, show_spinner=False)
+def _ensure_database_cached() -> bool:
     try:
         _worksheet("uploads", UPLOAD_HEADERS)
         _worksheet("runs", RUN_HEADERS)
@@ -173,9 +187,10 @@ def append_efficiency_records(records: Sequence[Mapping[str, Any]], *, run_id: s
         rows.append(row)
 
     ws = _worksheet("efficiency_daily", EFFICIENCY_HEADERS)
-    current_headers = ws.row_values(1) or list(EFFICIENCY_HEADERS)
+    current_headers = list(EFFICIENCY_HEADERS)
     values = [[row.get(header, "") for header in current_headers] for row in rows]
     ws.append_rows(values, value_input_option="USER_ENTERED")
+    _clear_read_caches()
     return len(rows)
 
 
@@ -369,6 +384,7 @@ def save_result_dataframe(
         rows.append([row.get(header, "") for header in current_headers])
     if rows:
         ws.append_rows(rows, value_input_option="USER_ENTERED")
+        _clear_read_caches()
 
     save_run(
         run_id=run_id,
@@ -384,22 +400,32 @@ def save_result_dataframe(
 
 
 def read_sheet(sheet_name: str, max_rows: int = 500) -> pd.DataFrame:
-    if sheet_name == "uploads":
-        ws = _worksheet("uploads", UPLOAD_HEADERS)
-    elif sheet_name == "runs":
-        ws = _worksheet("runs", RUN_HEADERS)
-    elif sheet_name == "efficiency_daily":
-        ws = _worksheet("efficiency_daily", EFFICIENCY_HEADERS)
-    else:
-        ws = _spreadsheet().worksheet(sheet_name)
-    rows = ws.get_all_records()
+    try:
+        rows = _cached_sheet_records(sheet_name, int(max_rows))
+    except Exception:
+        ensure_database()
+        rows = _cached_sheet_records(sheet_name, int(max_rows))
     if not rows:
         return pd.DataFrame()
-    return pd.DataFrame(rows).tail(max_rows)
+    return pd.DataFrame(rows)
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _cached_sheet_records(sheet_name: str, max_rows: int) -> list[dict[str, Any]]:
+    ws = _spreadsheet().worksheet(sheet_name)
+    rows = ws.get_all_records()
+    if not rows:
+        return []
+    return rows[-int(max_rows):]
 
 
 def list_worksheets() -> list[str]:
     ensure_database()
+    return _cached_worksheet_names()
+
+
+@st.cache_data(ttl=120, show_spinner=False)
+def _cached_worksheet_names() -> list[str]:
     return [ws.title for ws in _spreadsheet().worksheets()]
 
 

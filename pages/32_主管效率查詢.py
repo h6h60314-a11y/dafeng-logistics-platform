@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 from common_ui import card_close, card_open, inject_logistics_theme, preview_table, render_kpis, set_page, KPI
-from google_sheet_store import ensure_database, is_configured, read_efficiency_daily, service_account_email
+from google_sheet_store import is_configured, read_efficiency_daily
 
 
 st.set_page_config(page_title="主管效率查詢", page_icon="📊", layout="wide")
@@ -32,18 +32,6 @@ if not is_configured():
     st.warning("請先到 Streamlit Secrets 設定 GSHEET_ID 與 google_service_account。")
     card_close()
     st.stop()
-
-try:
-    ensure_database()
-except Exception as exc:
-    card_open("Google Sheet 權限不足")
-    st.error(f"無法初始化主管效率資料表：{type(exc).__name__}: {exc!r}")
-    email = service_account_email()
-    if email:
-        st.info(f"請把這個 service account 加到 Google Sheet 共用，權限選編輯者：{email}")
-    card_close()
-    st.stop()
-
 
 today = dt.date.today()
 card_open("查詢條件")
