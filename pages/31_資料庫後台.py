@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from common_ui import card_close, card_open, inject_logistics_theme, preview_table, set_page
-from google_sheet_store import ensure_database, is_configured, list_result_worksheets, read_sheet
+from google_sheet_store import ensure_database, is_configured, list_result_worksheets, read_sheet, service_account_email
 
 
 st.set_page_config(page_title="資料庫後台", page_icon="🗄️", layout="wide")
@@ -62,6 +62,9 @@ try:
     st.success("Google Sheet 已連線，uploads / runs 工作表已完成初始化。")
 except Exception as exc:
     st.error(f"Google Sheet 初始化失敗：{type(exc).__name__}: {exc!r}")
+    email = service_account_email()
+    if email:
+        st.info(f"請確認 Google Sheet 已共用給這個 service account，權限需為編輯者：{email}")
     card_close()
     st.stop()
 card_close()

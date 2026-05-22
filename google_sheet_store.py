@@ -71,6 +71,11 @@ def _service_account_info() -> Optional[dict[str, Any]]:
     return None
 
 
+def service_account_email() -> str:
+    info = _service_account_info() or {}
+    return str(info.get("client_email", ""))
+
+
 @st.cache_resource(show_spinner=False)
 def _spreadsheet():
     try:
@@ -124,8 +129,15 @@ def append_record(sheet_name: str, record: Mapping[str, Any], headers: Sequence[
 
 
 def ensure_database() -> bool:
-    _worksheet("uploads", UPLOAD_HEADERS)
-    _worksheet("runs", RUN_HEADERS)
+    try:
+        _worksheet("uploads", UPLOAD_HEADERS)
+        _worksheet("runs", RUN_HEADERS)
+    except PermissionError as exc:
+        email = service_account_email()
+        raise PermissionError(
+            "Google Sheet 權限不足。請到 Google Sheet 按「共用」，"
+            f"把 service account 加為「編輯者」：{email}"
+        ) from exc
     return True
 
 
